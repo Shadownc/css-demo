@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国家中小企业数字化转型城市试点改造签约汇总表（转置版）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .fws-box {
+            height: 100vh;
+            overflow: auto;
+            background: linear-gradient(to bottom, #429aff, #e6f0ff);
+            padding: 20px 14px 100px 14px;
+        }
+
+        .fws-wrapper {
+            width: 100%;
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px 14px;
+        }
+
+        .table-title {
+            font-size: 28px;
+            color: #000;
+            font-weight: bold;
+            width: 100%;
+            text-align: center;
+            padding: 16px 0;
+        }
+
+        .table_detail {
+            overflow-x: auto;
+            overflow-y: auto;
+            width: 100%;
+            max-height: calc(100vh - 220px);
+            border-top: 1px solid #EBEBEB;
+            border-left: 1px solid #EBEBEB;
+        }
+
+        table {
+            border-collapse: collapse;
+            table-layout: auto;
+            width: auto;
+            min-width: 100%;
+        }
+
+        td, th {
+            border-right: 1px solid #EBEBEB;
+            border-bottom: 1px solid #EBEBEB;
+            min-width: 80px;
+            color: #333;
+            background-color: #ffffff;
+            font-size: 12px;
+            text-align: center;
+            padding: 8px 10px;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #FAFAFA;
+            color: #000;
+            font-weight: normal;
+        }
+
+        .red-text {
+            color: #ff4d4f;
+            font-weight: 500;
+        }
+
+        /* 固定第一列（指标列） */
+        .fixed-column,
+        .fixed-header {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            background: #FAFAFA;
+            font-weight: bold;
+            min-width: 110px;
+            max-width: 110px;
+            width: 110px;
+            text-align: left;
+            padding: 8px 10px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+            white-space: normal;
+            word-wrap: break-word;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+
+        /* 固定表头行 */
+        thead tr th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        /* 左上角单元格 */
+        .fixed-header {
+            z-index: 3;
+        }
+
+        /* 横屏适配 */
+        @media screen and (orientation: landscape) and (max-height: 600px) {
+            .fws-box {
+                padding: 10px 14px 50px 14px;
+            }
+
+            .table-title {
+                font-size: 24px;
+                padding: 10px 0;
+            }
+
+            .table_detail {
+                max-height: calc(100vh - 150px);
+            }
+
+            td, th {
+                font-size: 11px;
+                padding: 5px 8px;
+                min-width: 70px;
+            }
+
+            .fixed-column,
+            .fixed-header {
+                min-width: 100px;
+                max-width: 100px;
+                width: 100px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="fws-box">
+        <div class="fws-wrapper">
+            <div class="table-title">国家中小企业数字化转型城市试点改造签约汇总表</div>
+            <div class="table_detail">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th class="fixed-header">县市区</th>
+                            <!-- 县市区名称将通过JS生成 -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 数据行将通过JS生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 静态数据
+        const tableData = [
+            {
+                districtName: '西湖区',
+                totalTaskNum: 150,
+                mgrYearTaskNum: 80,
+                declareNum: 65,
+                addDeclareNum: 5,
+                mgrPrjPassNum: 45,
+                addMgrPrjPassNum: 3,
+                prjPassRatio: 56.3,
+                addPrjPassRatio: 3.8,
+                prjPassRatio2: 30.0,
+                addMgrPrjPassRatio: 2.0,
+                zjtxPassRatio: 45.0,
+                addZjtxPassRatio: 2.5,
+                evalReportNum: 40,
+                prjVerifyNum: 35,
+                prjFundNum: 30
+            },
+            {
+                districtName: '江干区',
+                totalTaskNum: 120,
+                mgrYearTaskNum: 65,
+                declareNum: 55,
+                addDeclareNum: 4,
+                mgrPrjPassNum: 38,
+                addMgrPrjPassNum: 2,
+                prjPassRatio: 58.5,
+                addPrjPassRatio: 3.1,
+                prjPassRatio2: 31.7,
+                addMgrPrjPassRatio: 1.7,
+                zjtxPassRatio: 47.7,
+                addZjtxPassRatio: 2.1,
+                evalReportNum: 35,
+                prjVerifyNum: 30,
+                prjFundNum: 25
+            },
+            {
+                districtName: '拱墅区',
+                totalTaskNum: 100,
+                mgrYearTaskNum: 55,
+                declareNum: 48,
+                addDeclareNum: 6,
+                mgrPrjPassNum: 32,
+                addMgrPrjPassNum: 4,
+                prjPassRatio: 58.2,
+                addPrjPassRatio: 7.3,
+                prjPassRatio2: 32.0,
+                addMgrPrjPassRatio: 4.0,
+                zjtxPassRatio: 50.9,
+                addZjtxPassRatio: 5.5,
+                evalReportNum: 28,
+                prjVerifyNum: 25,
+                prjFundNum: 20
+            },
+            {
+                districtName: '滨江区',
+                totalTaskNum: 180,
+                mgrYearTaskNum: 95,
+                declareNum: 78,
+                addDeclareNum: 7,
+                mgrPrjPassNum: 52,
+                addMgrPrjPassNum: 5,
+                prjPassRatio: 54.7,
+                addPrjPassRatio: 5.3,
+                prjPassRatio2: 28.9,
+                addMgrPrjPassRatio: 2.8,
+                zjtxPassRatio: 43.2,
+                addZjtxPassRatio: 3.2,
+                evalReportNum: 48,
+                prjVerifyNum: 42,
+                prjFundNum: 38
+            },
+            {
+                districtName: '余杭区',
+                totalTaskNum: 200,
+                mgrYearTaskNum: 110,
+                declareNum: 85,
+                addDeclareNum: 8,
+                mgrPrjPassNum: 58,
+                addMgrPrjPassNum: 6,
+                prjPassRatio: 52.7,
+                addPrjPassRatio: 5.5,
+                prjPassRatio2: 29.0,
+                addMgrPrjPassRatio: 3.0,
+                zjtxPassRatio: 41.8,
+                addZjtxPassRatio: 3.6,
+                evalReportNum: 50,
+                prjVerifyNum: 45,
+                prjFundNum: 40
+            },
+            {
+                districtName: '萧山区',
+                totalTaskNum: 160,
+                mgrYearTaskNum: 85,
+                declareNum: 70,
+                addDeclareNum: 5,
+                mgrPrjPassNum: 48,
+                addMgrPrjPassNum: 4,
+                prjPassRatio: 56.5,
+                addPrjPassRatio: 4.7,
+                prjPassRatio2: 30.0,
+                addMgrPrjPassRatio: 2.5,
+                zjtxPassRatio: 44.7,
+                addZjtxPassRatio: 2.9,
+                evalReportNum: 42,
+                prjVerifyNum: 38,
+                prjFundNum: 35
+            },
+            {
+                districtName: '临平区',
+                totalTaskNum: 90,
+                mgrYearTaskNum: 50,
+                declareNum: 42,
+                addDeclareNum: 3,
+                mgrPrjPassNum: 28,
+                addMgrPrjPassNum: 2,
+                prjPassRatio: 56.0,
+                addPrjPassRatio: 4.0,
+                prjPassRatio2: 31.1,
+                addMgrPrjPassRatio: 2.2,
+                zjtxPassRatio: 46.0,
+                addZjtxPassRatio: 2.4,
+                evalReportNum: 25,
+                prjVerifyNum: 22,
+                prjFundNum: 18
+            },
+            {
+                districtName: '钱塘区',
+                totalTaskNum: 130,
+                mgrYearTaskNum: 70,
+                declareNum: 60,
+                addDeclareNum: 4,
+                mgrPrjPassNum: 40,
+                addMgrPrjPassNum: 3,
+                prjPassRatio: 57.1,
+                addPrjPassRatio: 4.3,
+                prjPassRatio2: 30.8,
+                addMgrPrjPassRatio: 2.3,
+                zjtxPassRatio: 45.7,
+                addZjtxPassRatio: 2.7,
+                evalReportNum: 36,
+                prjVerifyNum: 32,
+                prjFundNum: 28
+            },
+            {
+                districtName: '富阳区',
+                totalTaskNum: 110,
+                mgrYearTaskNum: 60,
+                declareNum: 50,
+                addDeclareNum: 4,
+                mgrPrjPassNum: 35,
+                addMgrPrjPassNum: 3,
+                prjPassRatio: 58.3,
+                addPrjPassRatio: 5.0,
+                prjPassRatio2: 31.8,
+                addMgrPrjPassRatio: 2.7,
+                zjtxPassRatio: 46.7,
+                addZjtxPassRatio: 3.0,
+                evalReportNum: 30,
+                prjVerifyNum: 28,
+                prjFundNum: 24
+            },
+            {
+                districtName: '全市合计',
+                totalTaskNum: 1240,
+                mgrYearTaskNum: 670,
+                declareNum: 553,
+                addDeclareNum: 46,
+                mgrPrjPassNum: 376,
+                addMgrPrjPassNum: 32,
+                prjPassRatio: 56.1,
+                addPrjPassRatio: 4.8,
+                prjPassRatio2: 30.3,
+                addMgrPrjPassRatio: 2.6,
+                zjtxPassRatio: 45.5,
+                addZjtxPassRatio: 3.1,
+                evalReportNum: 334,
+                prjVerifyNum: 297,
+                prjFundNum: 258
+            }
+        ];
+
+        // 列定义
+        const columns = [
+            {
+                title: '总任务数（家）',
+                dataIndex: 'totalTaskNum',
+            },
+            {
+                title: `${new Date().getFullYear()}年任务数（家）`,
+                dataIndex: 'mgrYearTaskNum',
+            },
+            {
+                title: '意向申报数（家）',
+                dataIndex: 'declareNum',
+            },
+            {
+                title: '较上周新增（家）',
+                dataIndex: 'addDeclareNum',
+            },
+            {
+                title: '合同审核通过（个）',
+                dataIndex: 'mgrPrjPassNum',
+            },
+            {
+                title: '较上周新增（个）',
+                dataIndex: 'addMgrPrjPassNum',
+            },
+            {
+                title: '合同审核通过数占年度任务数（%）',
+                dataIndex: 'prjPassRatio',
+                customRender: (text) => formatPercentage(text)
+            },
+            {
+                title: '较上周新增（%）',
+                dataIndex: 'addPrjPassRatio',
+                customRender: (text) => formatPercentage(text)
+            },
+            {
+                title: '合同审核通过数占两年任务数（%）',
+                dataIndex: 'prjPassRatio2',
+                customRender: (text) => formatPercentage(text)
+            },
+            {
+                title: '较上周新增（%）',
+                dataIndex: 'addMgrPrjPassRatio',
+                customRender: (text) => formatPercentage(text)
+            },
+            {
+                title: '专精特新通过数占年度任务数（%）',
+                dataIndex: 'zjtxPassRatio',
+                customRender: (text) => formatPercentage(text)
+            },
+            {
+                title: '较上周新增（%）',
+                dataIndex: 'addZjtxPassRatio',
+                customRender: (text) => formatPercentage(text)
+            },
+            {
+                title: '已出评测报告',
+                dataIndex: 'evalReportNum',
+                customRender: (text) => formatValue(text)
+            },
+            {
+                title: '验收通过（家）',
+                dataIndex: 'prjVerifyNum',
+            },
+            {
+                title: '资金拨付（家）',
+                dataIndex: 'prjFundNum',
+            },
+        ];
+
+        // 格式化百分比
+        function formatPercentage(value) {
+            return value !== null && value !== undefined ? `${value.toFixed(1)}%` : '-';
+        }
+
+        // 格式化值
+        function formatValue(value) {
+            return value !== null && value !== undefined ? value : '-';
+        }
+
+        // 判断是否需要标红
+        function isRedColumn(colIndex, rowIndex) {
+            const totalCols = tableData.length;
+            const isLastThreeCols = colIndex >= totalCols - 3;
+            const isNotLastRow = rowIndex < columns.length - 1;
+            return isLastThreeCols && isNotLastRow;
+        }
+
+        // 生成表格
+        function generateTable() {
+            const table = document.getElementById('dataTable');
+            const thead = table.querySelector('thead tr');
+            const tbody = table.querySelector('tbody');
+
+            // 生成表头（县市区列）
+            tableData.forEach(item => {
+                const th = document.createElement('th');
+                th.textContent = item.districtName;
+                thead.appendChild(th);
+            });
+
+            // 生成数据行（每个指标一行）
+            columns.forEach((column, rowIndex) => {
+                const tr = document.createElement('tr');
+
+                // 第一列：指标名称
+                const tdLabel = document.createElement('td');
+                tdLabel.className = 'fixed-column';
+                tdLabel.textContent = column.title;
+                tr.appendChild(tdLabel);
+
+                // 其他列：数据值
+                tableData.forEach((item, colIndex) => {
+                    const td = document.createElement('td');
+                    const value = item[column.dataIndex];
+                    
+                    // 应用自定义渲染
+                    if (column.customRender) {
+                        td.textContent = column.customRender(value, item);
+                    } else {
+                        td.textContent = value !== null && value !== undefined ? value : '-';
+                    }
+
+                    // 添加红色文本样式
+                    if (isRedColumn(colIndex, rowIndex)) {
+                        td.classList.add('red-text');
+                    }
+
+                    tr.appendChild(td);
+                });
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 页面加载完成后生成表格
+        generateTable();
+    </script>
+</body>
+</html>
