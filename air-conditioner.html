@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-End AC UI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1c1c1e; /* 深空灰背景 */
+            --ac-body: #f2f2f7;
+            --stream-cyan: #64d2ff; /* iOS 风格蓝 */
+            --icon-color: #ebebf5; /* 图标默认白 */
+            --icon-hover: #ffffff;
+            --active-green: #30d158;
+            --active-glow: 0 0 20px rgba(48, 209, 88, 0.3);
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* ================= 空调主机 (保持之前的流线型设计) ================= */
+        .ac-housing {
+            position: relative;
+            width: 480px;
+            height: 150px;
+            background: linear-gradient(180deg, #ffffff 0%, #e5e5ea 100%);
+            border-radius: 14px 14px 36px 36px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .brand {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            letter-spacing: 2px;
+            font-weight: 600;
+            color: #aeaeb2;
+            text-transform: uppercase;
+        }
+
+        .display-oled {
+            position: absolute;
+            top: 45px;
+            right: 50px;
+            font-size: 36px;
+            font-weight: 300;
+            color: #1c1c1e;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: all 0.5s ease;
+            display: flex;
+        }
+        
+        .display-oled span { font-size: 16px; margin-top: 6px; margin-left: 4px; font-weight: 400; }
+
+        .vent-slot {
+            position: absolute;
+            bottom: 12px;
+            left: 20px;
+            right: 20px;
+            height: 18px;
+            background: #2c2c2e;
+            border-radius: 0 0 12px 12px;
+            overflow: hidden;
+            perspective: 600px;
+        }
+
+        .flap {
+            width: 100%;
+            height: 100%;
+            background: #d1d1d6;
+            border-radius: 2px;
+            transform-origin: top;
+            transform: rotateX(0deg);
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ================= 流体动画 ================= */
+        .flow-container {
+            position: absolute;
+            top: 150px;
+            left: 25px;
+            right: 25px;
+            height: 350px;
+            pointer-events: none;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.5s;
+            -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
+        }
+
+        .streamline {
+            position: absolute;
+            top: -100px;
+            width: 2px;
+            border-radius: 4px;
+            background: linear-gradient(to bottom, rgba(100, 210, 255, 0) 0%, var(--stream-cyan) 50%, rgba(0, 122, 255, 0.8) 100%);
+            opacity: 0.6;
+            filter: blur(1px);
+        }
+
+        @keyframes aeroFlow {
+            0% { transform: translateY(0) scaleY(0.2); opacity: 0; }
+            20% { opacity: 1; }
+            100% { transform: translateY(400px) scaleY(1.8); opacity: 0; }
+        }
+
+        /* ================= 🆕 全新升级的遥控器面板 ================= */
+        .controls {
+            margin-top: 180px;
+            /* 磨砂玻璃面板 */
+            background: rgba(44, 44, 46, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            padding: 20px 40px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            
+            display: flex;
+            gap: 30px; /* 按钮间距 */
+            align-items: center;
+        }
+
+        /* 按钮基础样式 */
+        .btn {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%; /* 正圆 */
+            border: none;
+            outline: none;
+            background: rgba(255, 255, 255, 0.08); /* 轻微透明白 */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--icon-color);
+        }
+
+        /* 悬停效果 */
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            color: var(--icon-hover);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        /* 点击按压效果 */
+        .btn:active {
+            transform: translateY(1px) scale(0.95);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* SVG 图标通用样式 */
+        .btn svg {
+            width: 28px;
+            height: 28px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        /* --- 电源键特殊样式 --- */
+        .btn-power {
+            background: rgba(255, 69, 58, 0.15); /* 默认淡淡的红色背景 */
+            color: #ff453a; /* 红色图标 */
+        }
+
+        .btn-power:hover {
+            background: rgba(255, 69, 58, 0.25);
+            box-shadow: 0 0 15px rgba(255, 69, 58, 0.2);
+        }
+
+        /* 电源开启状态 */
+        .btn-power.active-pwr {
+            background: var(--active-green);
+            color: white;
+            box-shadow: var(--active-glow);
+        }
+
+        /* --- 状态激活 --- */
+        .ac-housing.on .display-oled { opacity: 1; transform: translateY(0); color: var(--stream-cyan); text-shadow: 0 0 10px rgba(100, 210, 255, 0.3); }
+        .ac-housing.on .flap { transform: rotateX(-60deg); }
+        .ac-housing.on + .flow-container { opacity: 1; transition-delay: 0.3s; }
+        .ac-housing.on + .flow-container .streamline { animation: aeroFlow 1s infinite linear; }
+
+    </style>
+</head>
+<body>
+
+    <div class="ac-housing" id="ac">
+        <div class="brand">SMART CLIMATE</div>
+        <div class="display-oled" id="screen">24<span>°C</span></div>
+        <div class="vent-slot">
+            <div class="flap"></div>
+        </div>
+    </div>
+
+    <div class="flow-container" id="flowSystem"></div>
+
+    <!-- 🆕 优化后的遥控器面板 -->
+    <div class="controls">
+        <!-- 降温按钮 -->
+        <button class="btn" onclick="changeTemp(-1)" aria-label="Decrease Temp">
+            <svg viewBox="0 0 24 24">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        </button>
+
+        <!-- 电源按钮 -->
+        <button class="btn btn-power" id="pwrBtn" onclick="toggleAC()" aria-label="Power">
+            <svg viewBox="0 0 24 24">
+                <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                <line x1="12" y1="2" x2="12" y2="12"></line>
+            </svg>
+        </button>
+
+        <!-- 升温按钮 -->
+        <button class="btn" onclick="changeTemp(1)" aria-label="Increase Temp">
+            <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        const ac = document.getElementById('ac');
+        const pwrBtn = document.getElementById('pwrBtn');
+        const screen = document.getElementById('screen');
+        const flowSystem = document.getElementById('flowSystem');
+
+        let isOn = false;
+        let temp = 24;
+
+        // 生成流体线条
+        function initStreamlines() {
+            const lineCount = 18;
+            for(let i=0; i<lineCount; i++) {
+                const line = document.createElement('div');
+                line.classList.add('streamline');
+                line.style.left = Math.random() * 100 + '%';
+                line.style.width = (Math.random() * 2 + 1) + 'px';
+                line.style.height = (Math.random() * 120 + 60) + 'px';
+                line.style.animationDuration = (Math.random() * 0.4 + 0.5) + 's'; // 更快的风速
+                line.style.animationDelay = Math.random() * 1 + 's';
+                line.style.opacity = Math.random() * 0.5 + 0.2;
+                flowSystem.appendChild(line);
+            }
+        }
+
+        function toggleAC() {
+            isOn = !isOn;
+            if(isOn) {
+                ac.classList.add('on');
+                pwrBtn.classList.add('active-pwr');
+            } else {
+                ac.classList.remove('on');
+                pwrBtn.classList.remove('active-pwr');
+            }
+        }
+
+        function changeTemp(val) {
+            if(!isOn) return;
+            
+            // 按钮点击动画反馈
+            const btn = event.currentTarget;
+            btn.style.transform = "scale(0.9)";
+            setTimeout(() => btn.style.transform = "", 150);
+
+            temp += val;
+            if(temp > 30) temp = 30;
+            if(temp < 16) temp = 16;
+            screen.innerHTML = `${temp}<span>°C</span>`;
+
+            // 调节温度时，流体亮度激增一下
+            flowSystem.style.filter = 'brightness(2.5)';
+            setTimeout(() => flowSystem.style.filter = 'blur(1px)', 200);
+        }
+
+        initStreamlines();
+    </script>
+</body>
+</html>

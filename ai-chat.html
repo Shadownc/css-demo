@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 问答界面</title>
+    <style>
+        /* CSS 样式 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .chat-container {
+            width: 80%;
+            max-width: 800px;
+            height: 90vh;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-box {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-message {
+            align-items: flex-end;
+        }
+        
+        .ai-message {
+            align-items: flex-start;
+        }
+
+        .message-content {
+            padding: 10px 15px;
+            border-radius: 15px;
+            display: inline-block;
+            max-width: 85%;
+        }
+
+        .user-message .message-content {
+            background-color: #007bff;
+            color: white;
+            border-radius: 15px 15px 0 15px;
+        }
+
+        .ai-message .message-content {
+            background-color: #e9e9eb;
+            color: #333;
+            border-radius: 15px 15px 15px 0;
+            text-align: left;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 16px;
+            outline: none;
+            resize: none; /* 防止文本域被手动调整大小 */
+        }
+
+        #send-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #send-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Markdown 样式 */
+        .ai-message .message-content h1,
+        .ai-message .message-content h2,
+        .ai-message .message-content h3 {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.3em;
+        }
+
+        .ai-message .message-content p {
+            margin: 0 0 1em;
+        }
+        
+        .ai-message .message-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .ai-message .message-content ul,
+        .ai-message .message-content ol {
+            padding-left: 20px;
+            margin-bottom: 1em;
+        }
+
+        .ai-message .message-content code {
+            background-color: rgba(0,0,0,0.06);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        .ai-message .message-content pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-bottom: 1em;
+        }
+
+        .ai-message .message-content pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+        
+        .ai-message .message-content table {
+            border-collapse: collapse;
+            margin-bottom: 1em;
+            width: 100%;
+        }
+        
+        .ai-message .message-content th, 
+        .ai-message .message-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        
+        .ai-message .message-content th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-box" id="chat-box">
+            <!-- 聊天消息将在这里动态插入 -->
+        </div>
+        <div class="chat-input">
+            <textarea id="user-input" placeholder="在这里输入您的问题..." rows="1"></textarea>
+            <button id="send-btn">发送</button>
+        </div>
+    </div>
+
+    <!-- 引入 marked.js 库来解析 Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // JavaScript 逻辑
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatBox = document.getElementById('chat-box');
+            const userInput = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-btn');
+
+            // 动态调整输入框高度
+            userInput.addEventListener('input', () => {
+                userInput.style.height = 'auto';
+                userInput.style.height = userInput.scrollHeight + 'px';
+            });
+            
+            // 发送消息事件
+            sendBtn.addEventListener('click', sendMessage);
+            userInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault(); // 阻止默认的回车换行行为
+                    sendMessage();
+                }
+            });
+
+            function sendMessage() {
+                const userText = userInput.value.trim();
+                if (userText === '') return;
+
+                appendMessage('user', userText);
+                userInput.value = '';
+                userInput.style.height = 'auto'; // 重置输入框高度
+
+                simulateAIResponse();
+            }
+
+            function appendMessage(sender, text) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message', `${sender}-message`);
+
+                const messageContent = document.createElement('div');
+                messageContent.classList.add('message-content');
+                
+                if (sender === 'user') {
+                    messageContent.textContent = text;
+                } else {
+                    // 对于AI消息，我们先创建一个空的容器，稍后填充流式数据
+                    messageContent.innerHTML = '';
+                }
+
+                messageDiv.appendChild(messageContent);
+                chatBox.appendChild(messageDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+                return messageContent; // 返回内容元素以便于后续操作
+            }
+
+            function simulateAIResponse() {
+                const aiMessageContent = appendMessage('ai', '');
+
+                const mockResponse = `好的，这是一个关于 **AI Studio** 的 Markdown 示例：
+
+# 欢迎来到 AI Studio
+
+AI Studio 是一个强大的平台，可以帮助您：
+
+*   构建和训练机器学习模型
+*   与最新的 AI 模型进行交互
+*   将您的想法变为现实
+
+## 主要功能
+
+1.  **模型试验场**: 在一个统一的界面中测试和比较不同的模型。
+2.  **代码生成**: 快速生成可在您的应用程序中使用的代码片段。
+3.  **多模态支持**: 不仅仅是文本，还可以处理图像、音频和视频。
+
+### 代码示例
+
+以下是一个简单的 Python 代码块：
+
+\`\`\`python
+def greet(name):
+  print(f"Hello, {name}!")
+
+greet("AI Developer")
+\`\`\`
+
+### 表格示例
+
+| 功能点       | 描述                               | 状态   |
+|--------------|------------------------------------|--------|
+| **文本生成** | 支持多种语言和风格的文本创作       | 已上线 |
+| **图像识别** | 可识别超过1000种常见物体           | 已上线 |
+| **语音合成** | 生成自然流畅的人声                 | 测试中 |
+
+希望这个示例对您有帮助！
+`;
+                let currentText = '';
+                let currentIndex = 0;
+                const streamInterval = setInterval(() => {
+                    if (currentIndex < mockResponse.length) {
+                        currentText += mockResponse[currentIndex];
+                        
+                        // 使用 marked.js 将累积的 Markdown 文本转换为 HTML
+                        aiMessageContent.innerHTML = marked.parse(currentText);
+                        
+                        currentIndex++;
+                        chatBox.scrollTop = chatBox.scrollHeight; // 实时滚动到底部
+                    } else {
+                        clearInterval(streamInterval);
+                    }
+                }, 25); // 控制打字速度，单位是毫秒
+            }
+
+            // 初始欢迎消息
+            function showWelcomeMessage() {
+                 const welcomeMessage = appendMessage('ai', '');
+                 welcomeMessage.innerHTML = marked.parse("你好！我是一个AI助手，可以回答你的问题。试试问我一些事情吧！");
+            }
+            
+            showWelcomeMessage();
+        });
+    </script>
+</body>
+</html>
