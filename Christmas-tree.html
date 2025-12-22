@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>粒子圣诞树 - 丝滑扫描过渡版</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; cursor: pointer; }
+        #hint {
+            position: absolute; top: 20px; width: 100%; text-align: center;
+            color: rgba(255,255,255,0.4); font-family: "Microsoft YaHei", sans-serif;
+            letter-spacing: 1px; pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- <div id="hint">每 5 秒自动切换颜色 | 从上至下流动过渡</div> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        let scene, camera, renderer, treeGroup;
+        let coreParticles, spiralParticles, star;
+        let colorIndex = 0;
+
+        // 过渡逻辑变量
+        let isTransitioning = false;
+        let transitionStartTime = 0;
+        const transitionDuration = 2.0; // 整个树变色完成的总时间
+
+        const themes = [
+            { main: new THREE.Color(0xff69b4), sub: new THREE.Color(0xffffff) }, // 粉色
+            { main: new THREE.Color(0x00aaff), sub: new THREE.Color(0xffffff) }, // 蓝色
+            { main: new THREE.Color(0xffd700), sub: new THREE.Color(0xffae00) }  // 金色
+        ];
+
+        // 记录上一次的颜色，用于平滑插值
+        let prevMainColor = new THREE.Color(themes[0].main);
+        let prevSubColor = new THREE.Color(themes[0].sub);
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 10); 
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
+
+            treeGroup = new THREE.Group();
+            scene.add(treeGroup);
+
+            const sprite = createCircleSprite();
+
+            // 1. 核心锥体 - 保持原有数学逻辑
+            const coreGeom = new THREE.BufferGeometry();
+            const corePos = [];
+            const coreCols = [];
+            for (let i = 0; i < 6000; i++) {
+                const y = Math.random() * 6; 
+                const radius = (6 - y) * 0.35;
+                const theta = Math.random() * Math.PI * 2;
+                corePos.push(
+                    Math.cos(theta) * radius * Math.sqrt(Math.random()), 
+                    y - 3, 
+                    Math.sin(theta) * radius * Math.sqrt(Math.random())
+                );
+                // 初始化颜色属性
+                coreCols.push(themes[0].main.r, themes[0].main.g, themes[0].main.b);
+            }
+            coreGeom.setAttribute('position', new THREE.Float32BufferAttribute(corePos, 3));
+            coreGeom.setAttribute('color', new THREE.Float32BufferAttribute(coreCols, 3));
+            
+            coreParticles = new THREE.Points(coreGeom, new THREE.PointsMaterial({
+                size: 0.07, sizeAttenuation: true, map: sprite,
+                transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+                vertexColors: true // 开启顶点变色
+            }));
+            treeGroup.add(coreParticles);
+
+            // 2. 螺旋带 - 保持原有数学逻辑（完全不动）
+            const spiralGeom = new THREE.BufferGeometry();
+            const spiralPos = [];
+            const spiralCols = [];
+            for (let i = 0; i < 3500; i++) {
+                const t = i / 3500;
+                const angle = t * Math.PI * 18; 
+                const y = t * 6;
+                const radius = (6 - y) * 0.42;
+                const off = 0.15;
+                spiralPos.push(
+                    Math.cos(angle) * radius + (Math.random()-0.5)*off,
+                    y - 3 + (Math.random()-0.5)*off,
+                    Math.sin(angle) * radius + (Math.random()-0.5)*off
+                );
+                // 初始化颜色属性
+                spiralCols.push(themes[0].sub.r, themes[0].sub.g, themes[0].sub.b);
+            }
+            spiralGeom.setAttribute('position', new THREE.Float32BufferAttribute(spiralPos, 3));
+            spiralGeom.setAttribute('color', new THREE.Float32BufferAttribute(spiralCols, 3));
+            
+            spiralParticles = new THREE.Points(spiralGeom, new THREE.PointsMaterial({
+                size: 0.09, map: sprite, transparent: true,
+                blending: THREE.AdditiveBlending, depthWrite: false,
+                vertexColors: true // 开启顶点变色
+            }));
+            treeGroup.add(spiralParticles);
+
+            // 3. 顶部星光 - 保持原有逻辑
+            const starMat = new THREE.SpriteMaterial({ 
+                map: sprite, color: themes[0].sub, blending: THREE.AdditiveBlending, transparent: true 
+            });
+            star = new THREE.Sprite(starMat);
+            star.scale.set(0.5, 0.5, 1);
+            star.position.y = 3.3;
+            treeGroup.add(star);
+
+            // 绑定交互
+            window.addEventListener('mousedown', startTransition);
+            window.addEventListener('resize', onWindowResize);
+
+            // 设定每隔 5 秒自动切换
+            setInterval(startTransition, 5000);
+        }
+
+        function startTransition() {
+            if (isTransitioning) return;
+            prevMainColor.copy(themes[colorIndex].main);
+            prevSubColor.copy(themes[colorIndex].sub);
+            colorIndex = (colorIndex + 1) % themes.length;
+            isTransitioning = true;
+            transitionStartTime = Date.now();
+        }
+
+        // 处理从上到下的变色算法
+        function updateColorsWithScan(particles, fromCol, toCol, elapsed) {
+            const colAttr = particles.geometry.attributes.color;
+            const posAttr = particles.geometry.attributes.position;
+            
+            for (let i = 0; i < posAttr.count; i++) {
+                const y = posAttr.getY(i); // 范围: 3 到 -3
+                
+                // 计算每个点的启动延迟 (越往上 delay 越小)
+                const normalizedY = (3 - y) / 6; // 0(顶) 到 1(底)
+                const delay = normalizedY * 1.0; // 扫描延迟系数
+                
+                // 每个粒子的变色时长设为 0.5 秒
+                let p = (elapsed - delay) / 0.5;
+                p = Math.max(0, Math.min(1, p));
+                
+                colAttr.setX(i, fromCol.r + (toCol.r - fromCol.r) * p);
+                colAttr.setY(i, fromCol.g + (toCol.g - fromCol.g) * p);
+                colAttr.setZ(i, fromCol.b + (toCol.b - fromCol.b) * p);
+            }
+            colAttr.needsUpdate = true;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const now = Date.now();
+            const time = now * 0.001;
+
+            if (isTransitioning) {
+                const elapsed = (now - transitionStartTime) / 1000;
+                
+                updateColorsWithScan(coreParticles, prevMainColor, themes[colorIndex].main, elapsed);
+                updateColorsWithScan(spiralParticles, prevSubColor, themes[colorIndex].sub, elapsed);
+                
+                // 星星颜色跟随整体进度快速切换
+                star.material.color.lerpColors(prevSubColor, themes[colorIndex].sub, Math.min(1, elapsed * 2));
+
+                if (elapsed > transitionDuration) isTransitioning = false;
+            }
+
+            treeGroup.rotation.y += 0.015;
+            
+            // 保持原本的螺旋带起伏效果不动
+            spiralParticles.position.y = Math.sin(time * 2) * 0.05;
+            
+            const starScale = 0.5 + Math.sin(time * 4) * 0.1;
+            star.scale.set(starScale, starScale, 1);
+            
+            renderer.render(scene, camera);
+        }
+
+        function createCircleSprite() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.2, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+            gradient.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 64, 64);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+</html>
